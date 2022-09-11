@@ -127,3 +127,6 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# disregard Desktop Services Store files
+.DS_Store
