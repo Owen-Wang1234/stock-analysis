@@ -110,7 +110,7 @@ The "main engine" of the macro program generally looked like this:
     Next i
 ```
 
-The stock ticker array, the total volume, and the starting and ending prices were initialized. Next, the entire list of entries was examined; if the ticker matches then the total volume is incremented by the recorded amount and the starting price and ending price of the stock are both found by checking if the entry is first and last respectively. Then, the stock ticker, total volume over the year, and annual return (based on the ratio of ending over starting) were all printed out to their designated cells. The variables are reset as the whole list gets re-examined for the next stock ticker in the array.
+The array of 12 stock tickers, the total volume variable, and the starting and ending price variables were initialized. Next, two loops were created; the outer loop runs through the ticker array while the inner loop runs through the entire list of entries. If the current entry and indexed tickers match then the total volume is increased by the recorded amount and the starting price and ending price of the stock are both found by checking if the entry is first and last in the group respectively. Then, the stock ticker, total volume over the year, and annual return (based on the ratio of ending over starting) were all printed out to their designated cells. The total volume variable is set and reset to 0 at the top of the outer loop.
 
 A sample collection of the run times of the original code is displayed here:
 
@@ -200,7 +200,7 @@ The revised "main engine" after refactoring now looks like this:
             
             tickerEndingPrices(tickerIndex) = Cells(i, 6).Value
 
-            '3d Increase the tickerIndex.
+            '3d) Increase the tickerIndex.
             tickerIndex = tickerIndex + 1
             
         End If
@@ -223,7 +223,7 @@ The revised "main engine" after refactoring now looks like this:
     Next i
 ```
 
-The total volume, the starting price, and the ending price are now declared as arrays like the stock ticker list; this means a quick loop is used to initialize the total volumes at 0. Now, as the entire list is examined, when the stock ticker in the entry matches the current ticker in the list, the volume, the starting price, and the ending price are all entered into the correct index in the respective arrays that correspond to the ticker. When the stock ticker in the entry does not match the current ticker in the list, the next ticker in the list is used. The entire list is gone through just once as opposed to every time for each stock ticker like before, and the output is now printed outside the end of loop as a result. Another loop is set up to print the contents of the output arrays.
+The total volume, the starting price, and the ending price are now declared as arrays like the stock ticker list; this means a quick loop is used to initialize the total volumes at 0. Now, one loop runs through the entire list; when the stock ticker in the entry matches the current ticker in the list, the volume, the starting price, and the ending price are all entered into the correct index in the respective arrays that correspond to the ticker. When checking for the ending price, the confirmation of the last entry for the current stock ticker also prompts the incrementing of the index to go to the next ticker in the list. The entire list is gone through just once as opposed to every time for each stock ticker like before, and the output is now printed outside the end of loop as a result. A separate loop is thus set up to print the contents of the output arrays.
 
 A sample collection of the run times of the refactored code is displayed here:
 
