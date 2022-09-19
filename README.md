@@ -1,2 +1,69 @@
-# stock-analysis
-Analysis of stock data using VBA and Excel Macros
+# VBA of Wall Street
+## Overview of Project
+The client was given an Excel workbook that came with VBA scripted macros that analyzed all the stock entries compiled in a sheet for 2017 and 2018, depending on which year the client inputs when prompted. The macros then printed out the tickers, their corresponding total volume for the designated year, and their corresponding return at end of that year. Each sheet contains a few thousand entries grouped into twelve stock tickers, and the macros are able to analyze all the entries in little more than one second.
+
+### Purpose
+The challenge is to refactor the code script to make the macros more efficient and take less time to complete, especially when the macros are going to be run on longer lists with many more stock tickers. The initial code as-is would likely need a sizable amount of time when the entries number in many more thousands up to almost one million, especially when they come with dozens of stock tickers.
+
+A successful refactor should allow the macros to run much faster without compromising the accuracy of the results; the output should be the same between the original and the refactored macros. The script should still be easy to comprehend with clear comments.
+
+## Results
+After a refactored script was created separate from the original script and then tested to work correctly, each one was run for the same year to verify that the output matched. This was done for both the 2017 year and the 2018 year, and the matching outputs are posted below.
+
+![This is the stock performance output for the year 2017.](https://github.com/Owen-Wang1234/stock-analysis/blob/main/Resources/Stock_Performance_2017.png)
+
+![This is the stock performance output for the year 2018.](https://github.com/Owen-Wang1234/stock-analysis/blob/main/Resources/Stock_Performance_2018.png)
+
+In order to measure the difference in run time, each script was run a number of times with the timer records collected.
+
+### Stock Performance from 2017 to 2018
+The 2017 analysis gives the appearance that almost all of the 12 companies have performed reasonably well with only TERP being in the negative (return of -7.2%). The best performer in that year was DQ (return of 199.4%) with SEDG not far behind (return of 184.5%); ENPH and FLSR also posted returns above 100% (at least doubling any money that was intially invested at the start of the year). The others also showed some positive return except TERP.
+
+The 2018 analysis however displays a completely different story. The only two which posted positive returns were ENPH (81.9%) and RUN (84.0%); and DQ in fact happened to be the worst performer (return of -62.6%). Unless the client is willing to take a chance on the two positive performers for 2019, it would be more prudent to diversify with other sectors that show a more consistent positive return.
+
+### The Original Code and Performance
+The "main engine" of the macro program generally looked like this:
+
+(Insert the sample of original code)
+
+The stock ticker array, the total volume, and the starting and ending prices were initialized. Next, the entire list of entries was examined; if the ticker matches then the total volume is incremented by the recorded amount and the starting price and ending price of the stock are both found by checking if the entry is first and last respectively. Then, the stock ticker, total volume over the year, and annual return (based on the ratio of ending over starting) were all printed out to their designated cells. The variables are reset as the whole list gets re-examined for the next stock ticker in the array.
+
+A sample collection of the run times of the original code is displayed here:
+
+![These are six readings from the original macro time measurement](https://github.com/Owen-Wang1234/stock-analysis/blob/main/Resources/VBA_Challenge_2018.png)
+
+With this admittedly small sample size of six, some basic observations are:
+
+- MEAN:1.16081
+- MEDIAN:1.1582
+- MIN:1.121094
+- MAX:1.203125
+
+Although this appears reasonably far faster than analyzing over 3,000 stock data entry lines for twelve companies by hand, the run time will grow at a much faster rate if the data sheets were much longer and contained many more thousands if not a million data entry lines for several dozens of companies if not a thousand.
+
+### The Refactored Code and Performance
+The revised "main engine" after refactoring now looks like this:
+
+(Insert the sample of refactored code)
+
+The total volume, the starting price, and the ending price are now declared as arrays like the stock ticker list; this means a quick loop is used to initialize the total volumes at 0. Now, as the entire list is examined, when the stock ticker in the entry matches the current ticker in the list, the volume, the starting price, and the ending price are all entered into the correct index in the respective arrays that correspond to the ticker. When the stock ticker in the entry does not match the current ticker in the list, the next ticker in the list is used. The entire list is gone through just once as opposed to every time for each stock ticker like before, and the output is now printed outside the end of loop as a result. Another loop is set up to print the contents of the output arrays.
+
+A sample collection of the run times of the refactored code is displayed here:
+
+![These are six readings from the refactored macro time measurement](https://github.com/Owen-Wang1234/stock-analysis/blob/main/Resources/VBA_Challenge_2018_Refactored.png)
+
+With this admittedly small sample size of six, some basic observations are:
+
+- MEAN:0.181641
+- MEDIAN:0.173828
+- MIN:0.1640625
+- MAX:0.2109375
+
+Without compromising the intended function, the program was able to do the same job at a much faster pace, taking almost 15% of the time initially required with the original code.
+
+## Summary
+
+1. What are the advantages or disadvantages of refactoring code?
+   - Refactoring a program generally involves adjusting the code for improvement without affecting the function. The concept of improvement includes but is not limited to faster performance, better readability, and simpler code. Although the relative difficulty of such a task varies, a successful refactoring means the program will run faster and may be less prone to issues. However, refactoring tends to "optimize" the code in a certain way depending on what form of improvement is desired, and refactoring towards one thing may be at the expense of another. As an example, one primary concern is that refactoring programs for speed might make them dependent on how the input and data are set up and configured, so they may no longer be as robust.
+2. How do those pros and cons apply to refactoring the original VBA script?
+   - When refactoring VBA macros, doing so to increase performance speed to go through large data sheets with many data entries quickly runs the risk of making the macro less robust as it depends even more on the configuration and arrangement of the data. As an example, the macro involved in this project may be much faster after refactoring to handle much larger volumes of data in much less time, but it is now less robust than before. The data must be grouped by ticker for the refactored macro to work properly; the original macro was not as dependent on this.
