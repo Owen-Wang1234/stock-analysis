@@ -24,7 +24,91 @@ The 2018 analysis however displays a completely different story. The only two wh
 ### The Original Code and Performance
 The "main engine" of the macro program generally looked like this:
 
-(Insert the sample of original code)
+```
+    '1) Format the output sheet on All Stocks Analysis worksheet
+    Worksheets("All Stocks Analysis").Activate
+
+    Range("A1").Value = "All Stocks (" + yearValue + ")"
+
+    'Create a header row
+    Cells(3, 1).Value = "Ticker"
+    Cells(3, 2).Value = "Total Daily Volume"
+    Cells(3, 3).Value = "Return"
+
+    '2) Initialize the list of all the stock tickers
+    Dim tickers(11) As String
+    tickers(0) = "AY"
+    tickers(1) = "CSIQ"
+    tickers(2) = "DQ"
+    tickers(3) = "ENPH"
+    tickers(4) = "FSLR"
+    tickers(5) = "HASI"
+    tickers(6) = "JKS"
+    tickers(7) = "RUN"
+    tickers(8) = "SEDG"
+    tickers(9) = "SPWR"
+    tickers(10) = "TERP"
+    tickers(11) = "VSLR"
+
+    '3a) Initialize the starting price and the ending price
+    Dim startingPrice As Double
+    Dim endingPrice As Double
+
+    '3b) Go to the correct data worksheet
+    Worksheets(yearValue).Activate
+
+    '3c) Set the starting and ending rows for the loop
+    rowStart = 2
+
+    'rowEnd code taken from https://stackoverflow.com/questions/18088729/row-count-where data exists
+    rowEnd = Cells(Rows.Count, "A").End(xlUp).Row
+
+    '4) The outer loop goes through all the tickers
+    For i = 0 To 11
+    
+        ticker = tickers(i)
+    
+        'Initialize the total volume and reset to 0
+        totalVolume = 0
+    
+        '5) The inner loop does the actual analysis through the data sheet
+        Worksheets(yearValue).Activate
+        For j = rowStart To rowEnd
+        
+            '5a) Accumulate totalVolume for the current ticker
+            If Cells(j, 1).Value = ticker Then
+            
+                totalVolume = totalVolume + Cells(j, 8).Value
+            
+            End If
+        
+            '5b) Set the starting price of the current ticker
+            If Cells(j - 1, 1).Value <> ticker And Cells(j, 1).Value = ticker Then
+            
+                startingPrice = Cells(j, 6).Value
+            
+            End If
+        
+            '5c) Set the ending price of the current ticker
+            If Cells(j + 1, 1).Value <> ticker And Cells(j, 1).Value = ticker Then
+            
+                endingPrice = Cells(j, 6).Value
+            
+            End If
+        
+        Next j
+    
+        '6) Print out the results
+        Worksheets("All Stocks Analysis").Activate
+        
+        Cells(4 + i, 1).Value = ticker
+        
+        Cells(4 + i, 2).Value = totalVolume
+        
+        Cells(4 + i, 3).Value = (endingPrice / startingPrice) - 1
+        
+    Next i
+```
 
 The stock ticker array, the total volume, and the starting and ending prices were initialized. Next, the entire list of entries was examined; if the ticker matches then the total volume is incremented by the recorded amount and the starting price and ending price of the stock are both found by checking if the entry is first and last respectively. Then, the stock ticker, total volume over the year, and annual return (based on the ratio of ending over starting) were all printed out to their designated cells. The variables are reset as the whole list gets re-examined for the next stock ticker in the array.
 
@@ -44,7 +128,100 @@ Although this appears reasonably far faster than analyzing over 3,000 stock data
 ### The Refactored Code and Performance
 The revised "main engine" after refactoring now looks like this:
 
-(Insert the sample of refactored code)
+```
+    'Format the output sheet on All Stocks Analysis worksheet
+    Worksheets("All Stocks Analysis").Activate
+    
+    Range("A1").Value = "All Stocks (" + yearValue + ")"
+    
+    'Create a header row
+    Cells(3, 1).Value = "Ticker"
+    Cells(3, 2).Value = "Total Daily Volume"
+    Cells(3, 3).Value = "Return"
+
+    'Initialize array of all tickers
+    Dim tickers(12) As String
+    
+    tickers(0) = "AY"
+    tickers(1) = "CSIQ"
+    tickers(2) = "DQ"
+    tickers(3) = "ENPH"
+    tickers(4) = "FSLR"
+    tickers(5) = "HASI"
+    tickers(6) = "JKS"
+    tickers(7) = "RUN"
+    tickers(8) = "SEDG"
+    tickers(9) = "SPWR"
+    tickers(10) = "TERP"
+    tickers(11) = "VSLR"
+    
+    'Activate data worksheet
+    Worksheets(yearValue).Activate
+    
+    'Get the number of rows to loop over
+    RowCount = Cells(Rows.Count, "A").End(xlUp).Row
+    
+    '1a) Create a ticker Index
+    Dim tickerIndex As Integer
+    tickerIndex = 0
+
+    '1b) Create three output arrays
+    Dim tickerVolumes(12) As Long
+    Dim tickerStartingPrices(12) As Single
+    Dim tickerEndingPrices(12) As Single
+    
+    ''2a) Create a for loop to initialize the tickerVolumes to zero.
+    For i = 0 To 11
+    
+        tickerVolumes(i) = 0
+    
+    Next i
+        
+    ''2b) Loop over all the rows in the spreadsheet.
+    For i = 2 To RowCount
+    
+        '3a) Increase volume for current ticker
+        If Cells(i, 1).Value = tickers(tickerIndex) Then
+        
+            tickerVolumes(tickerIndex) = tickerVolumes(tickerIndex) + Cells(i, 8).Value
+        
+        End If
+        
+        '3b) Check if the current row is the first row with the selected tickerIndex.
+        If Cells(i, 1).Value = tickers(tickerIndex) And Cells(i - 1, 1).Value <> tickers(tickerIndex) Then
+            
+            tickerStartingPrices(tickerIndex) = Cells(i, 6).Value
+            
+        End If
+        
+        '3c) check if the current row is the last row with the selected ticker
+         'If the next row’s ticker doesn’t match, increase the tickerIndex.
+        If Cells(i, 1).Value = tickers(tickerIndex) And Cells(i + 1, 1).Value <> tickers(tickerIndex) Then
+            
+            tickerEndingPrices(tickerIndex) = Cells(i, 6).Value
+
+            '3d Increase the tickerIndex.
+            tickerIndex = tickerIndex + 1
+            
+        End If
+    
+    Next i
+    
+    '4) Loop through your arrays to output the Ticker, Total Daily Volume, and Return.
+    For i = 0 To 11
+        
+        Worksheets("All Stocks Analysis").Activate
+        'Output the Ticker
+        Cells(4 + i, 1).Value = tickers(i)
+        
+        'Output the Total Daily Volume
+        Cells(4 + i, 2).Value = tickerVolumes(i)
+        
+        'Output the Return
+        Cells(4 + i, 3).Value = (tickerEndingPrices(i) / tickerStartingPrices(i)) - 1
+        
+    Next i
+```
 
 The total volume, the starting price, and the ending price are now declared as arrays like the stock ticker list; this means a quick loop is used to initialize the total volumes at 0. Now, as the entire list is examined, when the stock ticker in the entry matches the current ticker in the list, the volume, the starting price, and the ending price are all entered into the correct index in the respective arrays that correspond to the ticker. When the stock ticker in the entry does not match the current ticker in the list, the next ticker in the list is used. The entire list is gone through just once as opposed to every time for each stock ticker like before, and the output is now printed outside the end of loop as a result. Another loop is set up to print the contents of the output arrays.
 
